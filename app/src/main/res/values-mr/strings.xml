@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">टर्मक्स कंट्रोल सेंटर</string>
+    <string name="usb_manager">USB व्यवस्थापक</string>
+    <string name="network_tools">नेटवर्क साधने</string>
+    <string name="system_info">सिस्टम माहिती</string>
+</resources>
