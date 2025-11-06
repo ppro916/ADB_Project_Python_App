@@ -1,0 +1,115 @@
+package com.termux.controlcenter.utils
+
+import android.content.Context
+import android.os.Build
+import android.os.Environment
+import android.os.StatFs
+import java.io.RandomAccessFile
+import java.util.*
+
+class SystemInfo(private val context: Context) {
+    
+    data class RamUsage(
+        val totalMB: Long,
+        val usedMB: Long,
+        val freeMB: Long,
+        val usagePercent: Int
+    )
+    
+    data class StorageInfo(
+        val totalGB: Double,
+        val usedGB: Double,
+        val freeGB: Double,
+        val usagePercent: Int
+    )
+    
+    data class BatteryInfo(
+        val level: Int,
+        val status: String,
+        val health: String,
+        val temperature: Float
+    )
+    
+    fun getCpuUsage(): Int {
+        return try {
+            val reader = RandomAccessFile("/proc/stat", "r")
+            val line = reader.readLine()
+            reader.close()
+            
+            val tokens = line.split("\\s+".toRegex())
+            if (tokens.size >= 5) {
+                val idle = tokens[4].toLong()
+                val total = tokens.subList(1, 5).sumOf { it.toLong() }
+                
+                // Simple calculation - in real app, you'd compare with previous values
+                ((total - idle) * 100 / total).toInt()
+            } else {
+                0
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
+    
+    fun getRamUsage(): RamUsage {
+        val memoryInfo = android.app.ActivityManager.MemoryInfo()
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        activityManager.getMemoryInfo(memoryInfo)
+        
+        val totalMB = memoryInfo.totalMem / (1024 * 1024)
+        val availableMB = memoryInfo.availMem / (1024 * 1024)
+        val usedMB = totalMB - availableMB
+        val usagePercent = (usedMB * 100 / totalMB).toInt()
+        
+        return RamUsage(totalMB, usedMB, availableMB, usagePercent)
+    }
+    
+    fun getStorageInfo(): StorageInfo {
+        val path = Environment.getExternalStorageDirectory()
+        val stat = StatFs(path.path)
+        
+        val blockSize = stat.blockSizeLong
+        val totalBlocks = stat.blockCountLong
+        val availableBlocks = stat.availableBlocksLong
+        
+        val totalGB = (totalBlocks * blockSize) / (1024.0 * 1024 * 1024)
+        val availableGB = (availableBlocks * blockSize) / (1024.0 * 1024 * 1024)
+        val usedGB = totalGB - availableGB
+        val usagePercent = (usedGB * 100 / totalGB).toInt()
+        
+        return StorageInfo(totalGB, usedGB, availableGB, usagePercent)
+    }
+    
+    fun getBatteryInfo(): BatteryInfo {
+        val batteryStatus = context.registerReceiver(
+            null,
+            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        )
+        
+        val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+        val batteryPct = (level * 100 / scale.toFloat()).toInt()
+        
+        val status = when (batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
+            BatteryManager.BATTERY_STATUS_CHARGING -> "चार्जिंग"
+            BatteryManager.BATTERY_STATUS_DISCHARGING -> "डिस्चार्जिंग"
+            BatteryManager.BATTERY_STATUS_FULL -> "पूर्ण"
+            else -> "अज्ञात"
+        }
+        
+        val temperature = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)?.div(10.0f) ?: 0f
+        
+        return BatteryInfo(batteryPct, status, "सामान्य", temperature)
+    }
+    
+    fun getDeviceInfo(): Map<String, String> {
+        return mapOf(
+            "मॉडेल" to Build.MODEL,
+            "ब्रँड" to Build.BRAND,
+            "Android आवृत्ती" to Build.VERSION.RELEASE,
+            "API स्तर" to Build.VERSION.SDK_INT.toString(),
+            "प्रोसेसर" to Build.HARDWARE,
+            "कर्नल" to System.getProperty("os.version") ?: "अज्ञात"
+        )
+    }
+}
