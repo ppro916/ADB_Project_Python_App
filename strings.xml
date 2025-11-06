@@ -1,0 +1,37 @@
+<!-- values-mr/strings.xml -->
+<resources>
+    <string name="app_name">टर्मक्स कंट्रोल सेंटर</string>
+    <string name="app_name_marathi">टर्मक्स नियंत्रण केंद्र</string>
+    
+    <!-- Navigation -->
+    <string name="title_dashboard">डॅशबोर्ड</string>
+    <string name="title_usb_manager">USB व्यवस्थापक</string>
+    <string name="title_storage">स्टोरेज</string>
+    <string name="title_network">नेटवर्क</string>
+    <string name="title_monitor">मॉनिटर</string>
+    
+    <!-- Common Terms -->
+    <string name="connected">जोडले</string>
+    <string name="disconnected">डिस्कनेक्ट केले</string>
+    <string name="refresh">रिफ्रेश</string>
+    <string name="scan">स्कॅन</string>
+    <string name="start">सुरू</string>
+    <string name="stop">थांबवा</string>
+    
+    <!-- System Info -->
+    <string name="cpu_usage_format">CPU वापर: %d%%</string>
+    <string name="ram_usage_format">RAM वापर: %d%%</string>
+    <string name="ram_info_format">%d MB / %d MB</string>
+    <string name="storage_usage_format">स्टोरेज: %.1f GB / %.1f GB</string>
+    <string name="battery_format">बॅटरी: %d%%</string>
+    
+    <!-- USB Messages -->
+    <string name="no_usb_devices">कोणतीही USB डिव्हाइस सापडली नाही</string>
+    <string name="usb_device_connected">USB डिव्हाइस जोडली</string>
+    
+    <!-- Network -->
+    <string name="error_host_required">होस्ट नाव आवश्यक आहे</string>
+    <string name="scan_starting">पोर्ट स्कॅन सुरू करत आहे…</string>
+    <string name="scan_complete">स्कॅन पूर्ण</string>
+    <string name="ports_open">उघडे पोर्ट</string>
+</resources>
