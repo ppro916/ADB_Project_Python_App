@@ -1,0 +1,101 @@
+package com.termux.controlcenter.features
+
+import android.os.AsyncTask
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import com.termux.controlcenter.databinding.FragmentNetworkToolsBinding
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.util.*
+
+class NetworkToolsFragment : Fragment() {
+    
+    private var _binding: FragmentNetworkToolsBinding? = null
+    private val binding get() = _binding!!
+    
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentNetworkToolsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupNetworkTools()
+    }
+    
+    private fun setupNetworkTools() {
+        binding.btnScanPorts.setOnClickListener {
+            startPortScan()
+        }
+        
+        binding.btnNetworkInfo.setOnClickListener {
+            showNetworkInfo()
+        }
+        
+        binding.btnPingTest.setOnClickListener {
+            startPingTest()
+        }
+    }
+    
+    private fun startPortScan() {
+        val host = binding.etHost.text.toString()
+        if (host.isEmpty()) {
+            binding.etHost.error = getString(R.string.error_host_required)
+            return
+        }
+        
+        PortScanTask().execute(host)
+    }
+    
+    private inner class PortScanTask : AsyncTask<String, String, List<Int>>() {
+        
+        override fun onPreExecute() {
+            binding.progressScan.visibility = View.VISIBLE
+            binding.tvScanResults.text = getString(R.string.scan_starting)
+        }
+        
+        override fun doInBackground(vararg params: String?): List<Int> {
+            val host = params[0]!!
+            val openPorts = mutableListOf<Int>()
+            val commonPorts = listOf(21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 8080)
+            
+            for (port in commonPorts) {
+                if (isPortOpen(host, port)) {
+                    openPorts.add(port)
+                    publishProgress("पोर्ट $port उघडा आहे")
+                }
+                
+                if (isCancelled) break
+            }
+            
+            return openPorts
+        }
+        
+        override fun onProgressUpdate(vararg values: String?) {
+            binding.tvScanResults.append("${values[0]}\n")
+        }
+        
+        override fun onPostExecute(result: List<Int>) {
+            binding.progressScan.visibility = View.GONE
+            binding.tvScanResults.append("\n${getString(R.string.scan_complete)}: ${result.size} ${getString(R.string.ports_open)}")
+        }
+        
+        private fun isPortOpen(host: String, port: Int): Boolean {
+            return try {
+                val socket = java.net.Socket()
+                socket.connect(java.net.InetSocketAddress(host, port), 1000)
+                socket.close()
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+}
